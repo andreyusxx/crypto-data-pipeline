@@ -10,3 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    
+  ingestion:
+    build: ./data_ingestion 
+    container_name: crypto_ingestion
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db

@@ -4,7 +4,7 @@ import time
 import sys
 
 DB_CONFIG = {
-    "host": "localhost",
+    "host": "db",
     "database": "crypto_db",
     "user": "user",
     "password": "password",
