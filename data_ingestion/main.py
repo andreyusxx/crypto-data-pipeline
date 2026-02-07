@@ -41,11 +41,20 @@ def save_to_db(symbol, price):
 
 if __name__ == "__main__":
     print("🚀 Запуск стримінгу даних...")
+    last_price = None
     while True:
         try:
             symbol, price = fetch_btc_price()
             if symbol and price:
+                if last_price is not None:
+                    diff = price - last_price
+                    percent_change = (diff / last_price) * 100
+                    trend = "📈" if diff > 0 else "📉" if diff < 0 else "↔️"
+                    print(f"Аналіз: {trend} Зміна: {percent_change:.4f}%", flush=True)
+
                 save_to_db(symbol, price)
+                last_price = price
+                
             print("💤 Очікування 60 секунд до наступного оновлення...")
             time.sleep(60)
         except KeyboardInterrupt:
