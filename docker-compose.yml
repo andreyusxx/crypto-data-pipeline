@@ -17,4 +17,5 @@ services:
     depends_on:
       - db
     environment:
-      DB_HOST: db
+      - PYTHONUNBUFFERED=1
+      - DB_HOST=db
