@@ -41,6 +41,16 @@ def save_to_db(symbol, price):
 
 if __name__ == "__main__":
     print("🚀 Запуск стримінгу даних...")
-    symbol, price = fetch_btc_price()
-    if symbol and price:
-        save_to_db(symbol, price)
+    while True:
+        try:
+            symbol, price = fetch_btc_price()
+            if symbol and price:
+                save_to_db(symbol, price)
+            print("💤 Очікування 60 секунд до наступного оновлення...")
+            time.sleep(60)
+        except KeyboardInterrupt:
+            print("\n🛑 Стрімінг зупинено користувачем.")
+            break
+        except Exception as e:
+            print(f"⚠️ Непередбачена помилка в циклі: {e}")
+            time.sleep(10)
