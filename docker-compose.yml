@@ -20,6 +20,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - DB_HOST=db
+    volumes:
+      - ./data_ingestion:/app
   metabase:
     image: metabase/metabase:latest
     container_name: metabase

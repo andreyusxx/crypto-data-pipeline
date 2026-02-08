@@ -2,6 +2,8 @@ import requests
 import psycopg2
 import time
 import sys
+import logging
+import time
 
 DB_CONFIG = {
     "host": "db",
@@ -10,6 +12,16 @@ DB_CONFIG = {
     "password": "password",
     "port": "5432"
 }
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("pipeline.log"),
+        logging.StreamHandler()
+    ],
+    force=True
+)
 
 def fetch_btc_price():
     """Отримує актуальну ціну BTC з Binance API"""
@@ -20,7 +32,7 @@ def fetch_btc_price():
         data = response.json()
         return data['symbol'], float(data['price'])
     except Exception as e:
-        print(f"❌ Помилка API: {e}")
+        logging.info(f"❌ Помилка API: {e}")
         return None, None
 
 def save_to_db(symbol, price):
@@ -35,12 +47,12 @@ def save_to_db(symbol, price):
         conn.commit()
         cur.close()
         conn.close()
-        print(f"✅ Збережено в БД: {symbol} -> {price}")
+        logging.info(f"✅ Збережено в БД: {symbol} -> {price}")
     except Exception as e:
-        print(f"❌ Помилка БД: {e}")
+        logging.info(f"❌ Помилка БД: {e}")
 
 if __name__ == "__main__":
-    print("🚀 Запуск стримінгу даних...")
+    logging.info("🚀 Запуск стримінгу даних...")
     last_price = None
     while True:
         try:
@@ -50,16 +62,16 @@ if __name__ == "__main__":
                     diff = price - last_price
                     percent_change = (diff / last_price) * 100
                     trend = "📈" if diff > 0 else "📉" if diff < 0 else "↔️"
-                    print(f"Аналіз: {trend} Зміна: {percent_change:.4f}%", flush=True)
+                    logging.info(f"Аналіз: {trend} Зміна: {percent_change:.4f}%")
 
                 save_to_db(symbol, price)
                 last_price = price
                 
-            print("💤 Очікування 60 секунд до наступного оновлення...")
+            logging.info("💤 Очікування 60 секунд до наступного оновлення...")
             time.sleep(60)
         except KeyboardInterrupt:
-            print("\n🛑 Стрімінг зупинено користувачем.")
+            logging.info("\n🛑 Стрімінг зупинено користувачем.")
             break
         except Exception as e:
-            print(f"⚠️ Непередбачена помилка в циклі: {e}")
+            logging.info(f"⚠️ Непередбачена помилка в циклі: {e}")
             time.sleep(10)
