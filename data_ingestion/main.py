@@ -12,7 +12,7 @@ DB_CONFIG = {
     "password": "password",
     "port": "5432"
 }
-
+SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -23,17 +23,16 @@ logging.basicConfig(
     force=True
 )
 
-def fetch_btc_price():
-    """Отримує актуальну ціну BTC з Binance API"""
-    url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
+def fetch_crypto_prices(symbols):
+    symbols_param = str(symbols).replace(" ", "").replace("'", '"')
+    url = f"https://api.binance.com/api/v3/ticker/price?symbols={symbols_param}"
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status() 
-        data = response.json()
-        return {'symbol': data['symbol'], 'price': float(data['price'])}
+        return response.json()
     except Exception as e:
         logging.info(f"❌ Помилка API: {e}")
-        return None
+        return []
 
 def save_to_db(symbol, price):
     try:
@@ -53,25 +52,34 @@ def save_to_db(symbol, price):
 
 if __name__ == "__main__":
     logging.info("🚀 Запуск стримінгу даних...")
-    last_price = None
+    last_prices = {}
+
     while True:
         try:
-            current_data = fetch_btc_price()
-            if current_data:
-                symbol = current_data['symbol']
-                current_price = current_data['price']
-                if last_price is not None:
-                    diff = current_price - last_price
-                    change_percent = abs(current_price - last_price) / last_price * 100
+            prices_data = fetch_crypto_prices(SYMBOLS)
+
+            if not prices_data:
+                logging.warning("⚠️ Дані від API не отримані.")
+
+            for data in prices_data:
+                symbol = data['symbol']
+                current_price = float(data['price'])
+
+                if symbol in last_prices:
+                    prew_price = last_prices[symbol]
+                    diff = current_price - prew_price
+                    change_percent = abs(current_price - prew_price) / prew_price * 100
                     trend = "📈" if diff > 0 else "📉" if diff < 0 else "↔️"
+
+                    
                     if change_percent > 50:
                         logging.warning(f"⚠️ АНОМАЛІЯ: Ціна змінилася на {change_percent:.2f}%. Запис ігноровано. Поточна: {current_price}, Попередня: {last_price}")
                         time.sleep(60)
                         continue
-                    logging.info(f"Аналіз: {trend} Зміна: {change_percent:.4f}%")
+                    logging.info(f"Аналіз [{symbol}]: {trend} Зміна: {change_percent:.4f}%")
 
                 save_to_db(symbol, current_price)
-                last_price = current_price
+                last_prices[symbol] = current_price
                 
             logging.info("💤 Очікування 60 секунд до наступного оновлення...")
             time.sleep(60)
