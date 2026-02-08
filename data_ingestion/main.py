@@ -56,16 +56,21 @@ if __name__ == "__main__":
     last_price = None
     while True:
         try:
-            symbol, price = fetch_btc_price()
-            if symbol and price:
+            current_data = fetch_btc_price()
+            if current_data:
+                current_price = current_data['price']
                 if last_price is not None:
-                    diff = price - last_price
-                    percent_change = (diff / last_price) * 100
+                    diff = current_price - last_price
+                    change_percent = abs(current_price - last_price) / last_price * 100
                     trend = "📈" if diff > 0 else "📉" if diff < 0 else "↔️"
-                    logging.info(f"Аналіз: {trend} Зміна: {percent_change:.4f}%")
+                    if change_percent > 50:
+                        logging.warning(f"⚠️ АНОМАЛІЯ: Ціна змінилася на {change_percent:.2f}%. Запис ігноровано. Поточна: {current_price}, Попередня: {last_price}")
+                        time.sleep(60)
+                        continue
+                    logging.info(f"Аналіз: {trend} Зміна: {change_percent:.4f}%")
 
-                save_to_db(symbol, price)
-                last_price = price
+                save_to_db(current_data)
+                last_price = current_price
                 
             logging.info("💤 Очікування 60 секунд до наступного оновлення...")
             time.sleep(60)
