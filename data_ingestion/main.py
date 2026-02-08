@@ -30,10 +30,10 @@ def fetch_btc_price():
         response = requests.get(url, timeout=10)
         response.raise_for_status() 
         data = response.json()
-        return data['symbol'], float(data['price'])
+        return {'symbol': data['symbol'], 'price': float(data['price'])}
     except Exception as e:
         logging.info(f"❌ Помилка API: {e}")
-        return None, None
+        return None
 
 def save_to_db(symbol, price):
     try:
@@ -58,6 +58,7 @@ if __name__ == "__main__":
         try:
             current_data = fetch_btc_price()
             if current_data:
+                symbol = current_data['symbol']
                 current_price = current_data['price']
                 if last_price is not None:
                     diff = current_price - last_price
@@ -69,7 +70,7 @@ if __name__ == "__main__":
                         continue
                     logging.info(f"Аналіз: {trend} Зміна: {change_percent:.4f}%")
 
-                save_to_db(current_data)
+                save_to_db(symbol, current_price)
                 last_price = current_price
                 
             logging.info("💤 Очікування 60 секунд до наступного оновлення...")
