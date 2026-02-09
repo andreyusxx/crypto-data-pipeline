@@ -63,7 +63,8 @@ if __name__ == "__main__":
 
             for data in prices_data:
                 symbol = data['symbol']
-                current_price = float(data['price'])
+                current_price = float(data['lastPrice'])
+                current_volume = float(data['volume'])
 
                 if symbol in last_prices:
                     prew_price = last_prices[symbol]
@@ -78,7 +79,7 @@ if __name__ == "__main__":
                         continue
                     logging.info(f"Аналіз [{symbol}]: {trend} Зміна: {change_percent:.4f}%")
 
-                save_to_db(symbol, current_price)
+                save_to_db(symbol, current_price, current_volume)
                 last_prices[symbol] = current_price
                 
             logging.info("💤 Очікування 60 секунд до наступного оновлення...")
