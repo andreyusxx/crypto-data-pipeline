@@ -27,4 +27,9 @@ services:
     container_name: metabase
     ports:
       - "3000:3000"
+    volumes:
+      - ./metabase_data:/metabase.db
+    environment:
+      - MB_DB_TYPE=h2
+      - MB_DB_FILE=/metabase.db
     restart: always
