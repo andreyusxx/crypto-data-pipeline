@@ -25,7 +25,7 @@ logging.basicConfig(
 
 def fetch_crypto_prices(symbols):
     symbols_param = str(symbols).replace(" ", "").replace("'", '"')
-    url = f"https://api.binance.com/api/v3/ticker/price?symbols={symbols_param}"
+    url = f"https://api.binance.com/api/v3/ticker/24hr?symbols={symbols_param}"
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status() 
@@ -34,19 +34,19 @@ def fetch_crypto_prices(symbols):
         logging.info(f"❌ Помилка API: {e}")
         return []
 
-def save_to_db(symbol, price):
+def save_to_db(symbol, price,volume):
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO bitcoin_prices (symbol, price) VALUES (%s, %s)",
-            (symbol, price)
+            "INSERT INTO bitcoin_prices (symbol, price, volume) VALUES (%s, %s, %s)",
+            (symbol, price, volume)
         )
         
         conn.commit()
         cur.close()
         conn.close()
-        logging.info(f"✅ Збережено в БД: {symbol} -> {price}")
+        logging.info(f"✅ Збережено в БД: {symbol} -> {price}, Об'єм: {volume}")
     except Exception as e:
         logging.info(f"❌ Помилка БД: {e}")
 
