@@ -7,17 +7,8 @@ import time
 import os
 from dotenv import load_dotenv
 import psycopg2
+from config import DB_CONFIG, SYMBOLS, UPDATE_INTERVAL
 
-load_dotenv()
-
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST",), 
-    "database": os.getenv("DB_NAME"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "port": os.getenv("DB_PORT",)
-}
-SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -80,15 +71,15 @@ if __name__ == "__main__":
                     
                     if change_percent > 50:
                         logging.warning(f"⚠️ АНОМАЛІЯ: Ціна змінилася на {change_percent:.2f}%. Запис ігноровано. Поточна: {current_price}, Попередня: {last_price}")
-                        time.sleep(60)
+                        time.sleep(UPDATE_INTERVAL)
                         continue
                     logging.info(f"Аналіз [{symbol}]: {trend} Зміна: {change_percent:.4f}%")
 
                 save_to_db(symbol, current_price, current_volume)
                 last_prices[symbol] = current_price
                 
-            logging.info("💤 Очікування 60 секунд до наступного оновлення...")
-            time.sleep(60)
+            logging.info(f"💤 Очікування {UPDATE_INTERVAL} секунд до наступного оновлення...")
+            time.sleep(UPDATE_INTERVAL)
         except KeyboardInterrupt:
             logging.info("\n🛑 Стрімінг зупинено користувачем.")
             break
