@@ -4,13 +4,18 @@ import time
 import sys
 import logging
 import time
+import os
+from dotenv import load_dotenv
+import psycopg2
+
+load_dotenv()
 
 DB_CONFIG = {
-    "host": "db",
-    "database": "crypto_db",
-    "user": "user",
-    "password": "password",
-    "port": "5432"
+    "host": os.getenv("DB_HOST",), 
+    "database": os.getenv("DB_NAME"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "port": os.getenv("DB_PORT",)
 }
 SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 logging.basicConfig(
