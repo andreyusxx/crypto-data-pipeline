@@ -8,12 +8,12 @@ import os
 from dotenv import load_dotenv
 import psycopg2
 from config import DB_CONFIG, SYMBOLS, UPDATE_INTERVAL
-
+from logging.handlers import RotatingFileHandler
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("pipeline.log"),
+        RotatingFileHandler("pipeline.log",maxBytes=5*1024*1024, backupCount=3, encoding='utf-8'),
         logging.StreamHandler()
     ],
     force=True
@@ -27,22 +27,22 @@ def fetch_crypto_prices(symbols):
         response.raise_for_status() 
         return response.json()
     except Exception as e:
-        logging.info(f"❌ Помилка API: {e}")
+        logging.error(f"❌ Помилка API: {e}")
         return []
 
-def save_to_db(symbol, price,volume):
+def save_to_db(symbol, price,volume,event_time):
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO bitcoin_prices (symbol, price, volume) VALUES (%s, %s, %s)",
-            (symbol, price, volume)
+            "INSERT INTO bitcoin_prices (symbol, price, volume, event_time) VALUES (%s, %s, %s, %s)",
+            (symbol, price, volume, event_time)
         )
         
         conn.commit()
         cur.close()
         conn.close()
-        logging.info(f"✅ Збережено в БД: {symbol} -> {price}, Об'єм: {volume}")
+        logging.info(f"✅ Збережено в БД: {symbol} -> {price}, Об'єм: {volume}, (Час події: {event_time})")
     except Exception as e:
         logging.info(f"❌ Помилка БД: {e}")
 
@@ -61,6 +61,8 @@ if __name__ == "__main__":
                 symbol = data['symbol']
                 current_price = float(data['lastPrice'])
                 current_volume = float(data['volume'])
+                event_time = data['closeTime']
+
 
                 if symbol in last_prices:
                     prew_price = last_prices[symbol]
@@ -75,7 +77,7 @@ if __name__ == "__main__":
                         continue
                     logging.info(f"Аналіз [{symbol}]: {trend} Зміна: {change_percent:.4f}%")
 
-                save_to_db(symbol, current_price, current_volume)
+                save_to_db(symbol, current_price, current_volume,event_time)
                 last_prices[symbol] = current_price
                 
             logging.info(f"💤 Очікування {UPDATE_INTERVAL} секунд до наступного оновлення...")

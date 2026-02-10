@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Налаштування бази даних
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "db"),
     "database": os.getenv("DB_NAME", "crypto_db"),
@@ -12,6 +11,5 @@ DB_CONFIG = {
     "port": os.getenv("DB_PORT", "5432")
 }
 
-# Налаштування API та логіки
 SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
-UPDATE_INTERVAL = 60  # секунди
+UPDATE_INTERVAL = 60  
