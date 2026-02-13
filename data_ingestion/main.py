@@ -69,54 +69,58 @@ def check_db_connection():
         return False
 
 if __name__ == "__main__":
-    logging.info("🚀 Запуск стримінгу даних...")
+    mode = sys.argv[1] if len(sys.argv) > 1 else "stream"
     if not check_db_connection():
         exit(1)
     last_prices = {}
     maintenance_done = False
+    if mode == "once":
+        prices_data = fetch_crypto_prices(SYMBOLS)
+        logging.info("🎯 Одноразовий збір даних завершено.")
+    else:
+        logging.info("🚀 Запуск стримінгу даних...")
+        while True:
+            try:
+                prices_data = fetch_crypto_prices(SYMBOLS)
+                now = datetime.now()
+                if now.hour == 3 and now.minute == 0 and not maintenance_done:
+                    logging.info("⏰ Настав час нічного обслуговування...")
+                    run_maintenance()
+                    maintenance_done = True
+                if now.hour == 4:
+                    maintenance_done = False
 
-    while True:
-        try:
-            prices_data = fetch_crypto_prices(SYMBOLS)
-            now = datetime.now()
-            if now.hour == 3 and now.minute == 0 and not maintenance_done:
-                logging.info("⏰ Настав час нічного обслуговування...")
-                run_maintenance()
-                maintenance_done = True
-            if now.hour == 4:
-                maintenance_done = False
+                if not prices_data:
+                    logging.warning("⚠️ Дані від API не отримані.")
 
-            if not prices_data:
-                logging.warning("⚠️ Дані від API не отримані.")
-
-            for data in prices_data:
-                symbol = data['symbol']
-                current_price = float(data['lastPrice'])
-                current_volume = float(data['volume'])
-                event_time = data['closeTime']
+                for data in prices_data:
+                    symbol = data['symbol']
+                    current_price = float(data['lastPrice'])
+                    current_volume = float(data['volume'])
+                    event_time = data['closeTime']
 
 
-                if symbol in last_prices:
-                    prew_price = last_prices[symbol]
-                    diff = current_price - prew_price
-                    change_percent = abs(current_price - prew_price) / prew_price * 100
-                    trend = "📈" if diff > 0 else "📉" if diff < 0 else "↔️"
+                    if symbol in last_prices:
+                        prew_price = last_prices[symbol]
+                        diff = current_price - prew_price
+                        change_percent = abs(current_price - prew_price) / prew_price * 100
+                        trend = "📈" if diff > 0 else "📉" if diff < 0 else "↔️"
 
+                        
+                        if change_percent > 50:
+                            logging.warning(f"⚠️ АНОМАЛІЯ: Ціна змінилася на {change_percent:.2f}%. Запис ігноровано. Поточна: {current_price}, Попередня: {last_price}")
+                            time.sleep(UPDATE_INTERVAL)
+                            continue
+                        logging.info(f"Аналіз [{symbol}]: {trend} Зміна: {change_percent:.4f}%")
+
+                    save_to_db(symbol, current_price, current_volume,event_time)
+                    last_prices[symbol] = current_price
                     
-                    if change_percent > 50:
-                        logging.warning(f"⚠️ АНОМАЛІЯ: Ціна змінилася на {change_percent:.2f}%. Запис ігноровано. Поточна: {current_price}, Попередня: {last_price}")
-                        time.sleep(UPDATE_INTERVAL)
-                        continue
-                    logging.info(f"Аналіз [{symbol}]: {trend} Зміна: {change_percent:.4f}%")
-
-                save_to_db(symbol, current_price, current_volume,event_time)
-                last_prices[symbol] = current_price
-                
-            logging.info(f"💤 Очікування {UPDATE_INTERVAL} секунд до наступного оновлення...")
-            time.sleep(UPDATE_INTERVAL)
-        except KeyboardInterrupt:
-            logging.info("\n🛑 Стрімінг зупинено користувачем.")
-            break
-        except Exception as e:
-            logging.info(f"⚠️ Непередбачена помилка в циклі: {e}")
-            time.sleep(10)
+                logging.info(f"💤 Очікування {UPDATE_INTERVAL} секунд до наступного оновлення...")
+                time.sleep(UPDATE_INTERVAL)
+            except KeyboardInterrupt:
+                logging.info("\n🛑 Стрімінг зупинено користувачем.")
+                break
+            except Exception as e:
+                logging.info(f"⚠️ Непередбачена помилка в циклі: {e}")
+                time.sleep(10)
