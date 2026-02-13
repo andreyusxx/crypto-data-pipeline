@@ -58,8 +58,21 @@ def run_maintenance():
         logging.info("🧹 Обслуговування бази: старі дані видалено.")
     except Exception as e:
         logging.error(f"❌ Помилка під час очищення даних: {e}")
+
+def check_db_connection():
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        conn.close()
+        logging.info("🚀 З'єднання з БД успішне!")
+        return True
+    except Exception as e:
+        logging.error(f"⚠️ БД не доступна: {e}")
+        return False
+
 if __name__ == "__main__":
     logging.info("🚀 Запуск стримінгу даних...")
+    if not check_db_connection():
+        exit(1)
     last_prices = {}
     maintenance_done = False
 
@@ -73,7 +86,7 @@ if __name__ == "__main__":
                 maintenance_done = True
             if now.hour == 4:
                 maintenance_done = False
-                
+
             if not prices_data:
                 logging.warning("⚠️ Дані від API не отримані.")
 
