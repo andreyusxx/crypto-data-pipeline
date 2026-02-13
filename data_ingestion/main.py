@@ -1,14 +1,15 @@
+from arrow import now
 import requests
 import psycopg2
 import time
 import sys
 import logging
-import time
 import os
 from dotenv import load_dotenv
 import psycopg2
 from config import DB_CONFIG, SYMBOLS, UPDATE_INTERVAL
 from logging.handlers import RotatingFileHandler
+from datetime import datetime
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -46,14 +47,33 @@ def save_to_db(symbol, price,volume,event_time):
     except Exception as e:
         logging.info(f"❌ Помилка БД: {e}")
 
+def run_maintenance():
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+        cur.execute("CALL clean_old_data();") # Викликаємо твою процедуру
+        conn.commit()
+        cur.close()
+        conn.close()
+        logging.info("🧹 Обслуговування бази: старі дані видалено.")
+    except Exception as e:
+        logging.error(f"❌ Помилка під час очищення даних: {e}")
 if __name__ == "__main__":
     logging.info("🚀 Запуск стримінгу даних...")
     last_prices = {}
+    maintenance_done = False
 
     while True:
         try:
             prices_data = fetch_crypto_prices(SYMBOLS)
-
+            now = datetime.now()
+            if now.hour == 3 and now.minute == 0 and not maintenance_done:
+                logging.info("⏰ Настав час нічного обслуговування...")
+                run_maintenance()
+                maintenance_done = True
+            if now.hour == 4:
+                maintenance_done = False
+                
             if not prices_data:
                 logging.warning("⚠️ Дані від API не отримані.")
 
