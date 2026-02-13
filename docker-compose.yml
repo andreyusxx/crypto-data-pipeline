@@ -50,9 +50,18 @@ services:
     volumes:
       - ./dags:/opt/airflow/dags
       - ./data_ingestion:/opt/airflow/data_ingestion
+    env_file:
+      - .env
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://user:password@db:5432/crypto_db
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__SECRET_KEY=super-secret-key-123
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASSWORD}  
+      - DB_PORT=5432
     depends_on:
       - db
   airflow-scheduler:
@@ -61,8 +70,17 @@ services:
     volumes:
       - ./dags:/opt/airflow/dags
       - ./data_ingestion:/opt/airflow/data_ingestion
+    env_file:
+      - .env
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://user:password@db:5432/crypto_db
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__SECRET_KEY=super-secret-key-123
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASSWORD}
+      - DB_PORT=5432
     depends_on:
       - db
