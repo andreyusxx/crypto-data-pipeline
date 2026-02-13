@@ -74,9 +74,12 @@ if __name__ == "__main__":
         exit(1)
     last_prices = {}
     maintenance_done = False
-    if mode == "once":
+    if mode == "once": 
         prices_data = fetch_crypto_prices(SYMBOLS)
-        logging.info("🎯 Одноразовий збір даних завершено.")
+        if prices_data:
+            for data in prices_data:
+                save_to_db(data['symbol'], float(data['lastPrice']), float(data['volume']), data['closeTime'])
+        logging.info("🎯 Одноразовий збір та збереження даних завершено..")
     else:
         logging.info("🚀 Запуск стримінгу даних...")
         while True:
