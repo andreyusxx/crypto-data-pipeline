@@ -1,4 +1,3 @@
-from arrow import now
 import requests
 import psycopg2
 import time
