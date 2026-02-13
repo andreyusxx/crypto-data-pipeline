@@ -49,6 +49,7 @@ services:
       - "8080:8080"
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./data_ingestion:/opt/airflow/data_ingestion
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://user:password@db:5432/crypto_db
@@ -59,6 +60,7 @@ services:
     command: scheduler
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./data_ingestion:/opt/airflow/data_ingestion
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://user:password@db:5432/crypto_db
