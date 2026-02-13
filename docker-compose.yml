@@ -17,19 +17,6 @@ services:
       timeout: 5s
       retries: 5
     
-  ingestion:
-    build: ./data_ingestion 
-    container_name: crypto_ingestion
-    depends_on:
-      db:
-        condition: service_healthy 
-    env_file: 
-      - .env
-    environment:
-      - PYTHONUNBUFFERED=1
-      - DB_HOST=db
-    volumes:
-      - ./data_ingestion:/app
   metabase:
     image: metabase/metabase:latest
     container_name: metabase
