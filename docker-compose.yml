@@ -41,12 +41,22 @@ services:
       - MB_DB_TYPE=h2
       - MB_DB_FILE=/metabase.db
     restart: always
-    
+
   airflow-webserver:
     image: apache/airflow:2.7.1
     command: webserver
     ports:
       - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://user:password@db:5432/crypto_db
+    depends_on:
+      - db
+  airflow-scheduler:
+    image: apache/airflow:2.7.1
+    command: scheduler
     volumes:
       - ./dags:/opt/airflow/dags
     environment:
