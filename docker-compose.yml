@@ -49,6 +49,7 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASSWORD}  
       - DB_PORT=5432
+      - AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT=300
     depends_on:
       - db
   airflow-scheduler:

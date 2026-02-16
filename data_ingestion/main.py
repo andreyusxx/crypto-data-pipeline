@@ -1,7 +1,7 @@
 import requests
 import psycopg2
 import sys
-from config import DB_CONFIG, SYMBOLS, UPDATE_INTERVAL
+from config import DB_CONFIG, SYMBOLS
 
 
 def fetch_crypto_prices(symbols):
@@ -13,7 +13,7 @@ def fetch_crypto_prices(symbols):
 
 
 def save_to_db(symbol, price, volume, event_time):
-    table_name = f"prices_{symbol[:3].lower()}"
+    table_name = f"prices_{symbol.replace('USDT', '').lower()}"
         
     query = f"""
         INSERT INTO {table_name} (price, volume, event_time)
@@ -42,4 +42,4 @@ if __name__ == "__main__":
         if prices_data:
             for data in prices_data:
                 save_to_db(data['symbol'], float(data['lastPrice']), float(data['volume']), data['closeTime'])
-            exit(0)
+        exit(0)
