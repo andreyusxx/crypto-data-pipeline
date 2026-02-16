@@ -30,27 +30,28 @@ def fetch_crypto_prices(symbols):
         logging.error(f"❌ Помилка API: {e}")
         return []
 
-def save_to_db(symbol, price,volume,event_time):
+def save_to_db(symbol, price, volume, event_time):
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cur = conn.cursor()
-        cur.execute(
-            "INSERT INTO bitcoin_prices (symbol, price, volume, event_time) VALUES (%s, %s, %s, %s)",
-            (symbol, price, volume, event_time)
-        )
+        table_name = f"prices_{symbol[:3].lower()}"
         
-        conn.commit()
-        cur.close()
-        conn.close()
-        logging.info(f"✅ Збережено в БД: {symbol} -> {price}, Об'єм: {volume}, (Час події: {event_time})")
+        query = f"""
+            INSERT INTO {table_name} (price, volume, event_time)
+            VALUES (%s, %s, %s)
+        """
+        
+        with psycopg2.connect(**DB_CONFIG) as conn:
+            with conn.cursor() as cur:
+                cur.execute(query, (price, volume, event_time))
+                conn.commit()
+                
     except Exception as e:
-        logging.info(f"❌ Помилка БД: {e}")
+        raise Exception(f"Помилка БД при записі {symbol}: {e}")
 
 def run_maintenance():
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
-        cur.execute("CALL clean_old_data();") # Викликаємо твою процедуру
+        cur.execute("CALL clean_old_data();") 
         conn.commit()
         cur.close()
         conn.close()
