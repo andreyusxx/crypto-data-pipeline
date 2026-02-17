@@ -33,20 +33,24 @@ with DAG(
         bash_command="""
         docker run --rm \
         --network crypto-data-pipeline_default \
+        --env-file /opt/airflow/dags/.env \
         -v //c/crypto-data-pipeline/dbt_project:/usr/app/dbt \
         -e DBT_PROFILES_DIR=/usr/app/dbt \
-        ghcr.io/dbt-labs/dbt-postgres:1.7.3 run
+        --entrypoint /bin/bash \
+        ghcr.io/dbt-labs/dbt-postgres:1.7.3 -c "dbt run"
         """
     )
 
     dbt_test = BashOperator(
         task_id='dbt_test',
         bash_command="""
-    docker run --rm \
+        docker run --rm \
         --network crypto-data-pipeline_default \
+        --env-file /opt/airflow/dags/.env \
         -v //c/crypto-data-pipeline/dbt_project:/usr/app/dbt \
         -e DBT_PROFILES_DIR=/usr/app/dbt \
-        ghcr.io/dbt-labs/dbt-postgres:1.7.3 test
+        --entrypoint /bin/bash \
+        ghcr.io/dbt-labs/dbt-postgres:1.7.3 -c "dbt test"
         """
     )
 
