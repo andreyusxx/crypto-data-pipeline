@@ -33,12 +33,8 @@ with DAG(
         bash_command="""
         docker run --rm \
         --network crypto-data-pipeline_default \
-        -v /c/crypto-data-pipeline/dbt_project:/usr/app/dbt \
+        -v //c/crypto-data-pipeline/dbt_project:/usr/app/dbt \
         -e DBT_PROFILES_DIR=/usr/app/dbt \
-        -e POSTGRES_USER=user \
-        -e POSTGRES_PASSWORD=password \
-        -e POSTGRES_DB=crypto_db \
-        -e POSTGRES_HOST=crypto_postgres \
         ghcr.io/dbt-labs/dbt-postgres:1.7.3 run
         """
     )
@@ -46,15 +42,11 @@ with DAG(
     dbt_test = BashOperator(
         task_id='dbt_test',
         bash_command="""
-        docker run --rm \
+    docker run --rm \
         --network crypto-data-pipeline_default \
-        -v /c/crypto-data-pipeline/dbt_project:/usr/app/dbt \
+        -v //c/crypto-data-pipeline/dbt_project:/usr/app/dbt \
         -e DBT_PROFILES_DIR=/usr/app/dbt \
-        -e POSTGRES_USER=user \
-        -e POSTGRES_PASSWORD=password \
-        -e POSTGRES_DB=crypto_db \
-        -e POSTGRES_HOST=crypto_postgres \
-        ghcr.io/dbt-labs/dbt-postgres:1.7.3 test    
+        ghcr.io/dbt-labs/dbt-postgres:1.7.3 test
         """
     )
 
