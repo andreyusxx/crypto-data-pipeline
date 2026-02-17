@@ -79,9 +79,11 @@ services:
       - ./dbt_project:/usr/app/dbt
     environment:
       - DBT_PROFILES_DIR=/usr/app/dbt
-      - POSTGRES_HOST=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=crypto_db
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
       - POSTGRES_PORT=5432
     profiles: [dbt] 
+    networks:
+      - default
