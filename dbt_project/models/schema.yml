@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: all_prices
+    description: "Об'єднана таблиця цін для 8 криптовалют з конвертацією часу"
+    columns:
+      - name: symbol
+        description: "Тікер монети (BTC, ETH тощо)"
+        tests:
+          - not_null 
+          - accepted_values: 
+              values: ['BTC', 'ETH', 'SOL', 'BNB', 'ADA', 'DOGE', 'XRP', 'DOT']
+
+      - name: price
+        description: "Поточна ціна монети"
+        tests:
+          - not_null
+
+      - name: event_time
+        description: "Час отримання даних у форматі Timestamp"
+        tests:
+          - not_null
+          - unique 
