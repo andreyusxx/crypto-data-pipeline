@@ -69,7 +69,7 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://user:password@db:5432/crypto_db
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__WEBSERVER__SECRET_KEY=super-secret-key-123
-      - DB_HOST=db
+      - DB_HOST=crypto_postgres
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASSWORD}
@@ -83,7 +83,7 @@ services:
       - ./dbt_project:/usr/app/dbt
     environment:
       - DBT_PROFILES_DIR=/usr/app/dbt
-      - POSTGRES_HOST=db
+      - POSTGRES_HOST=crypto_postgres
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}

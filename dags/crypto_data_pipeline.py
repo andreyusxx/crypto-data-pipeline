@@ -38,8 +38,8 @@ with DAG(
         -e POSTGRES_USER=user \
         -e POSTGRES_PASSWORD=password \
         -e POSTGRES_DB=crypto_db \
-        -e POSTGRES_HOST=db \
-        ghcr.io/dbt-labs/dbt-postgres:1.7.3 /bin/bash -c "dbt deps && dbt run"
+        -e POSTGRES_HOST=crypto_postgres \
+        ghcr.io/dbt-labs/dbt-postgres:1.7.3 run
         """
     )
 
@@ -53,8 +53,8 @@ with DAG(
         -e POSTGRES_USER=user \
         -e POSTGRES_PASSWORD=password \
         -e POSTGRES_DB=crypto_db \
-        -e POSTGRES_HOST=db \
-        ghcr.io/dbt-labs/dbt-postgres:1.7.3 /bin/bash -c "dbt deps && dbt test"
+        -e POSTGRES_HOST=crypto_postgres \
+        ghcr.io/dbt-labs/dbt-postgres:1.7.3 test    
         """
     )
 
