@@ -2,6 +2,7 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from datetime import datetime, timedelta
+from airflow.operators.bash import BashOperator
 
 default_args = {
     'owner': 'Andriy',
@@ -27,5 +28,34 @@ with DAG(
         postgres_conn_id='crypto_db_conn',
         sql='CALL public.clean_old_data();'
     )
+    dbt_run = BashOperator(
+        task_id='dbt_run',
+        bash_command="""
+        docker run --rm \
+        --network crypto-data-pipeline_default \
+        -v /c/crypto-data-pipeline/dbt_project:/usr/app/dbt \
+        -e DBT_PROFILES_DIR=/usr/app/dbt \
+        -e POSTGRES_USER=user \
+        -e POSTGRES_PASSWORD=password \
+        -e POSTGRES_DB=crypto_db \
+        -e POSTGRES_HOST=db \
+        ghcr.io/dbt-labs/dbt-postgres:1.7.3 run
+        """
+    )
 
-    fetch_data >> clean_db
+    dbt_test = BashOperator(
+        task_id='dbt_test',
+        bash_command="""
+        docker run --rm \
+        --network crypto-data-pipeline_default \
+        -v /c/crypto-data-pipeline/dbt_project:/usr/app/dbt \
+        -e DBT_PROFILES_DIR=/usr/app/dbt \
+        -e POSTGRES_USER=user \
+        -e POSTGRES_PASSWORD=password \
+        -e POSTGRES_DB=crypto_db \
+        -e POSTGRES_HOST=db \
+        ghcr.io/dbt-labs/dbt-postgres:1.7.3 test
+        """
+    )
+
+    fetch_data >> clean_db >> dbt_run >> dbt_test
