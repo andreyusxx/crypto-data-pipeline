@@ -2,3 +2,9 @@ postgres_data/
 pipeline.log
 metabase_data
 .envtarget/
+dbt_project/dbt_packages/
+dbt_project/target/
+dbt_project/logs/
+dbt_project/.user.yml
+**/__pycache__/
+.env

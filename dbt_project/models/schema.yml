@@ -3,6 +3,11 @@ version: 2
 models:
   - name: all_prices
     description: "Об'єднана таблиця цін для 8 криптовалют з конвертацією часу"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - symbol
+            - event_time
     columns:
       - name: symbol
         description: "Тікер монети (BTC, ETH тощо)"
@@ -20,4 +25,3 @@ models:
         description: "Час отримання даних у форматі Timestamp"
         tests:
           - not_null
-          - unique 
