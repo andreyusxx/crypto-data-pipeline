@@ -1,5 +1,9 @@
-{{ config(materialized='table') }}
-
+{{
+  config(
+    materialized='incremental',
+    unique_key='timestamp'
+  )
+}}
 with raw_data as (
     select * from {{ ref('all_prices') }}
 ),
@@ -20,5 +24,8 @@ final as (
         ) as price_diff
     from raw_data
 )
+{% if is_incremental() %}
+  where timestamp > (select max(timestamp) from {{ this }})
+{% endif %}
 
 select * from final
