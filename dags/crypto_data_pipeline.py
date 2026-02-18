@@ -29,6 +29,21 @@ def send_telegram_message(context):
     except Exception as e:
         print(f"Помилка відправки в Telegram: {e}")
 
+def send_failure_alert(context):
+    try:
+        token = "8527661970:AAGcL4PE8nkqGSfceVBITJmNNOQ3_1Wc8UI"
+        chat_id = "890584537"
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        
+        dag_id = context.get('task_instance').dag_id
+        task_id = context.get('task_instance').task_id
+        error_msg = context.get('exception') 
+        
+        message = f"❌ ПОМИЛКА В DAG: {dag_id}\n🔺 Task: {task_id} ВПАЛА!\n⚠️ Помилка: {error_msg}"
+        
+        requests.post(url, data={'chat_id': chat_id, 'text': message})
+    except Exception as e:
+        print(f"Помилка сповіщення про збій: {e}")
 with DAG(
     dag_id='crypto_ingestion_v1',
     default_args=default_args,
@@ -71,7 +86,8 @@ with DAG(
         --entrypoint /bin/bash \
         ghcr.io/dbt-labs/dbt-postgres:1.7.3 -c "dbt test"
         """,
-        on_success_callback=send_telegram_message
+        on_success_callback=send_telegram_message,
+        on_failure_callback=send_failure_alert
     )
 
     fetch_data >> clean_db >> dbt_run >> dbt_test
