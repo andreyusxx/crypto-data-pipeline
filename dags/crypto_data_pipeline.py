@@ -1,14 +1,33 @@
+from multiprocessing import context
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from datetime import datetime, timedelta
 from airflow.operators.bash import BashOperator
+import requests
+import os
 
 default_args = {
     'owner': 'Andriy',
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
 }
+
+def send_telegram_message(context):
+    try:
+        token = "8527661970:AAGcL4PE8nkqGSfceVBITJMnNOQ3_1Wc8UI" 
+        chat_id = "890584537"
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        dag_id = context.get('task_instance').dag_id
+        task_id = context.get('task_instance').task_id
+        execution_date = context.get('execution_date')
+        
+        message = f"🚀 DAG: {dag_id}\n✅ Task: {task_id} успішно завершена!\n📅 Час: {execution_date}"
+        
+        response = requests.post(url, data={'chat_id': chat_id, 'text': message})
+        print(f"Telegram response: {response.text}")
+    except Exception as e:
+        print(f"Помилка відправки в Telegram: {e}")
 
 with DAG(
     dag_id='crypto_ingestion_v1',
@@ -51,7 +70,8 @@ with DAG(
         -e DBT_PROFILES_DIR=/usr/app/dbt \
         --entrypoint /bin/bash \
         ghcr.io/dbt-labs/dbt-postgres:1.7.3 -c "dbt test"
-        """
+        """,
+        on_success_callback=send_telegram_message
     )
 
     fetch_data >> clean_db >> dbt_run >> dbt_test
