@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from airflow.operators.bash import BashOperator
 import requests
 import os
+from airflow.models import Variable
 
 default_args = {
     'owner': 'Andriy',
@@ -15,8 +16,8 @@ default_args = {
 
 def send_telegram_message(context):
     try:
-        token = "8527661970:AAGcL4PE8nkqGSfceVBITJMnNOQ3_1Wc8UI" 
-        chat_id = "890584537"
+        token = Variable.get("telegram_bot_token") 
+        chat_id = Variable.get("telegram_chat_id")
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         dag_id = context.get('task_instance').dag_id
         task_id = context.get('task_instance').task_id
@@ -31,8 +32,8 @@ def send_telegram_message(context):
 
 def send_failure_alert(context):
     try:
-        token = "8527661970:AAGcL4PE8nkqGSfceVBITJmNNOQ3_1Wc8UI"
-        chat_id = "890584537"
+        token = Variable.get("telegram_bot_token") 
+        chat_id = Variable.get("telegram_chat_id")
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         
         dag_id = context.get('task_instance').dag_id
