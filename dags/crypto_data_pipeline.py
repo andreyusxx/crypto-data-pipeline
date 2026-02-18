@@ -20,7 +20,7 @@ def send_telegram_message(context):
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         dag_id = context.get('task_instance').dag_id
         task_id = context.get('task_instance').task_id
-        execution_date = context.get('execution_date')
+        execution_date = context.get('task_instance').end_date.strftime('%Y-%m-%d %H:%M:%S')
         
         message = f"🚀 DAG: {dag_id}\n✅ Task: {task_id} успішно завершена!\n📅 Час: {execution_date}"
         
