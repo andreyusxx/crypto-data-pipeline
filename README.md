@@ -18,6 +18,17 @@
 
 ---
 
+
+## 🛠 **Технологічний стек**
+* **Orchestration:** `Apache Airflow 2.7.1`
+* **Storage:** `PostgreSQL 15`, `MinIO`
+* **Transformation:** `dbt (Data Build Tool)`
+* **BI & UI:** `Metabase`, `Streamlit`
+* **Infrastructure:** `Docker` & `Docker Compose`
+* **Language:** `Python 3.9` (Pandas, SQLAlchemy, Plotly)
+
+---
+
 ## 📊 Візуалізація результатів
 
 ### Інтерактивний дашборд (Streamlit)
@@ -64,4 +75,5 @@ MINIO_ROOT_USER=admin
 MINIO_ROOT_PASSWORD=password
 MINIO_BUCKET_NAME=crypto-raw-data
 MINIO_ENDPOINT=minio:9000
+
 
