@@ -1,4 +1,4 @@
-from multiprocessing import context
+
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
@@ -7,12 +7,22 @@ import requests
 import os
 from airflow.models import Variable
 
-default_args = {
-    'owner': 'Andriy',
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
-    'on_failure_callback': send_failure_alert,
-}
+def send_failure_alert(context):
+    try:
+        token = Variable.get("telegram_bot_token") 
+        chat_id = Variable.get("telegram_chat_id")
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        
+        dag_id = context.get('task_instance').dag_id
+        task_id = context.get('task_instance').task_id
+        error_msg = context.get('exception') 
+        
+        message = f"❌ ПОМИЛКА В DAG: {dag_id}\n🔺 Task: {task_id} ВПАЛА!\n⚠️ Помилка: {error_msg}"
+        
+        requests.post(url, data={'chat_id': chat_id, 'text': message})
+    except Exception as e:
+        print(f"Помилка сповіщення про збій: {e}")
+
 
 def send_telegram_message(context):
     try:
@@ -30,21 +40,17 @@ def send_telegram_message(context):
     except Exception as e:
         print(f"Помилка відправки в Telegram: {e}")
 
-def send_failure_alert(context):
-    try:
-        token = Variable.get("telegram_bot_token") 
-        chat_id = Variable.get("telegram_chat_id")
-        url = f"https://api.telegram.org/bot{token}/sendMessage"
         
-        dag_id = context.get('task_instance').dag_id
-        task_id = context.get('task_instance').task_id
-        error_msg = context.get('exception') 
-        
-        message = f"❌ ПОМИЛКА В DAG: {dag_id}\n🔺 Task: {task_id} ВПАЛА!\n⚠️ Помилка: {error_msg}"
-        
-        requests.post(url, data={'chat_id': chat_id, 'text': message})
-    except Exception as e:
-        print(f"Помилка сповіщення про збій: {e}")
+default_args = {
+    'owner': 'Andriy',
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+    'on_failure_callback': send_failure_alert,
+}
+
+
+
+
 with DAG(
     dag_id='crypto_ingestion_v1',
     default_args=default_args,
