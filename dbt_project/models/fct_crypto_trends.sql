@@ -7,7 +7,7 @@
 with raw_data as (
     select * from {{ ref('all_prices') }}
     {% if is_incremental() %}
-      where event_time > (select max(event_time) from {{ this }})
+      where event_time >= (select max(event_time) - interval '30 minutes' from {{ this }})
     {% endif %}
 ),
 
@@ -30,3 +30,6 @@ final as (
 
 
 select * from final
+{% if is_incremental() %}
+  where event_time > (select max(event_time) from {{ this }})
+{% endif %}
