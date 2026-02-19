@@ -51,7 +51,7 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASSWORD}  
       - DB_PORT=5432
-      - AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT=300
+      - AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT=300
     depends_on:
       - db
   airflow-scheduler:
@@ -74,11 +74,14 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASSWORD}
       - DB_PORT=5432
+      - AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT=300
     depends_on:
       - db
   dbt:
     image: ghcr.io/dbt-labs/dbt-postgres:1.7.3
     container_name: dbt_transform
+    env_file:
+      - .env
     volumes:
       - ./dbt_project:/usr/app/dbt
     environment:
