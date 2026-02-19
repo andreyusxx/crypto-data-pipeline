@@ -105,5 +105,21 @@ services:
       - minio_data:/data
     restart: always
 
+  dashboard:
+    image: python:3.9-slim
+    container_name: crypto_dashboard
+    volumes:
+      - ./dashboard:/usr/app/dashboard
+    working_dir: /usr/app/dashboard
+    ports:
+      - "8501:8501"
+    command: >
+      sh -c "pip install streamlit pandas sqlalchemy psycopg2-binary plotly && 
+             streamlit run app.py"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=${DB_URL}
+
 volumes:
   minio_data:
