@@ -7,6 +7,7 @@ import requests
 import os
 from airflow.models import Variable
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.operators.python import PythonOperator
 
 def send_failure_alert(context):
     try:
