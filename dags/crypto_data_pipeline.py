@@ -3,7 +3,6 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from datetime import datetime, timedelta
-from airflow.operators.bash import BashOperator
 import requests
 import os
 from airflow.models import Variable
@@ -12,6 +11,7 @@ default_args = {
     'owner': 'Andriy',
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
+    'on_failure_callback': send_failure_alert,
 }
 
 def send_telegram_message(context):
@@ -52,11 +52,17 @@ with DAG(
     schedule_interval='*/5 * * * *', 
     catchup=False
 ) as dag:
-
-    fetch_data = BashOperator(
-        task_id='fetch_crypto_prices',
-        bash_command='python /opt/airflow/data_ingestion/main.py once'
+    
+    extract_task = BashOperator(
+        task_id='extract_to_minio',
+        bash_command='python /opt/airflow/data_ingestion/main.py extract',
     )
+
+    load_task = BashOperator(
+        task_id='load_to_postgres',
+        bash_command='python /opt/airflow/data_ingestion/main.py load',
+    )
+
 
     clean_db = PostgresOperator(
         task_id='clean_old_data',
@@ -88,7 +94,6 @@ with DAG(
         ghcr.io/dbt-labs/dbt-postgres:1.7.3 -c "dbt test"
         """,
         on_success_callback=send_telegram_message,
-        on_failure_callback=send_failure_alert
     )
 
-    fetch_data >> clean_db >> dbt_run >> dbt_test
+    extract_task >> load_task >> clean_db >> dbt_run >> dbt_test

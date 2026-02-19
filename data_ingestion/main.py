@@ -33,6 +33,41 @@ def save_to_minio(data, symbol):
     )
     print(f"--- [MinIO] Saved {symbol} data to {file_path} ---")
 
+def load_minio_to_postgres(symbol):
+    s3_client = boto3.client(
+        's3',
+        endpoint_url=f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+        aws_access_key_id=os.getenv('MINIO_ROOT_USER'),
+        aws_secret_access_key=os.getenv('MINIO_ROOT_PASSWORD')
+    )
+    
+    bucket = os.getenv('MINIO_BUCKET_NAME', 'crypto-raw-data')
+    prefix = f"{symbol}/" 
+
+    response = s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix)
+    
+    if 'Contents' not in response:
+        print(f"📭 Файлів для {symbol} не знайдено.")
+        return
+
+    all_files = sorted(response['Contents'], key=lambda x: x['LastModified'], reverse=True)
+    last_file_key = all_files[0]['Key']
+    
+    print(f"📄 Читаю останній файл: {last_file_key}")
+
+    file_obj = s3_client.get_object(Bucket=bucket, Key=last_file_key)
+    file_content = file_obj['Body'].read().decode('utf-8')
+    data = json.loads(file_content)
+
+    save_to_db(
+        data['symbol'], 
+        float(data['lastPrice']), 
+        float(data['volume']), 
+        data['closeTime']
+    )
+    print(f"✅ Дані з файлу {last_file_key} успішно перенесено в Postgres")
+
+
 def save_to_db(symbol, price, volume, event_time):
     table_name = f"prices_{symbol.replace('USDT', '').lower()}"
         
@@ -58,13 +93,13 @@ if __name__ == "__main__":
     if not check_db_connection():
         exit(1)
 
-    if mode == "once": 
+    if mode == "extract": 
         prices_data = fetch_crypto_prices(SYMBOLS)
         if prices_data:
             for data in prices_data:
-                try:
-                    save_to_minio(data, data['symbol'])
-                except Exception as e:
-                    print(f"⚠️ Помилка збереження в MinIO для {data['symbol']}: {e}")
-                save_to_db(data['symbol'], float(data['lastPrice']), float(data['volume']), data['closeTime'])
+                save_to_minio(data, data['symbol'])
+    elif mode == "load":
+        for symbol in SYMBOLS:
+            load_minio_to_postgres(symbol)
+
         exit(0)
