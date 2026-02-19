@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import requests
 import os
 from airflow.models import Variable
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 def send_failure_alert(context):
     try:
@@ -40,16 +41,54 @@ def send_telegram_message(context):
     except Exception as e:
         print(f"Помилка відправки в Telegram: {e}")
 
+def alert_on_price_jump(**context):
+    try:
+        data = context['ti'].xcom_pull(task_ids='extract_task')
+        current_price = float(data['price'])
+        symbol = data['symbol']
         
+        pg_hook = PostgresHook(postgres_conn_id='postgres_default')
+        query = f"""
+            SELECT price FROM public.fct_crypto_trends 
+            WHERE symbol = '{symbol}' 
+            ORDER BY event_time DESC 
+            LIMIT 1 OFFSET 1
+        """
+        result = pg_hook.get_first(query)
+        
+        if result:
+            previous_price = float(result[0])
+            price_change = ((current_price - previous_price) / previous_price) * 100
+            
+            if price_change >= 5:
+                token = Variable.get("telegram_bot_token")
+                chat_id = Variable.get("telegram_chat_id")
+                url = f"https://api.telegram.org/bot{token}/sendMessage"
+                
+                message = (
+                    f"🚀 *MOON ALERT!* 🚀\n\n"
+                    f"Пара: {symbol}\n"
+                    f"📈 Ріст: +{price_change:.2f}%\n"
+                    f"💰 Нова ціна: ${current_price:,.2f}\n"
+                    f"📉 Попередня: ${previous_price:,.2f}"
+                )
+                
+                requests.post(url, data={'chat_id': chat_id, 'text': message, 'parse_mode': 'Markdown'})
+                print(f"Alert sent for {symbol}!")
+            else:
+                print(f"Change is {price_change:.2f}%, no alert needed.")
+        else:
+            print("No previous data found to compare.")
+            
+    except Exception as e:
+        print(f"Помилка в аналізі ціни: {e}")
+
 default_args = {
     'owner': 'Andriy',
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
     'on_failure_callback': send_failure_alert,
 }
-
-
-
 
 with DAG(
     dag_id='crypto_ingestion_v1',
@@ -101,5 +140,10 @@ with DAG(
         """,
         on_success_callback=send_telegram_message,
     )
+    price_alert_task = PythonOperator(
+    task_id='price_alert_task',
+    python_callable=alert_on_price_jump,
+    provide_context=True
+)
 
-    extract_task >> load_task >> clean_db >> dbt_run >> dbt_test
+    extract_task >> load_task >> price_alert_task >> clean_db >> dbt_run >> dbt_test
