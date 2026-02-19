@@ -18,6 +18,19 @@
 
 ---
 
+## 📊 Візуалізація результатів
+
+### Інтерактивний дашборд (Streamlit)
+![Streamlit Dashboard](screenshots/dashboard.png)
+
+### Пайплайн даних (Airflow DAG)
+![Airflow DAG](screenshots/airflow_dag.png)
+
+### BI Аналітика (Metabase)
+![Metabase Analytics](screenshots/metabase_ui.png)
+
+---
+
 ## 🚦 **Порти сервісів**
 | Сервіс | Адреса | Призначення |
 | :--- | :--- | :--- |
@@ -36,18 +49,19 @@ git clone <url_твого_репозиторію>
 cd <назва_папки_проекту>
 ```
 ### **2. Налаштування змінних оточення**
-Telegram
+# Telegram
 TELEGRAM_TOKEN=your_token_here
 TELEGRAM_CHAT_ID=your_id_here
 
-Postgres
+# Postgres
 DB_USER=user
 DB_PASSWORD=password
 DB_NAME=crypto_db
 AIRFLOW_CONN_POSTGRES_DEFAULT=postgres://user:password@db:5432/crypto_db
 
-MinIO
+# MinIO
 MINIO_ROOT_USER=admin
 MINIO_ROOT_PASSWORD=password
 MINIO_BUCKET_NAME=crypto-raw-data
 MINIO_ENDPOINT=minio:9000
+
