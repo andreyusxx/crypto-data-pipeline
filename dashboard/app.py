@@ -15,7 +15,7 @@ def get_data():
     try:
         query = "SELECT * FROM public.fct_crypto_trends ORDER BY event_time DESC"
         return pd.read_sql(query, engine)
-    except Exception as e:
+    except Exception:
         return pd.DataFrame()
 
 df = get_data()
