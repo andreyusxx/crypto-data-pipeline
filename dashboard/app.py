@@ -32,7 +32,7 @@ if not df.empty:
         mode='lines',
         fill='tozeroy', 
         name='Price (USD)',
-        line=dict(color='#00ffcc', width=3)
+        line={'color': '#00ffcc', 'width': 3}
     ))
 
     fig.update_layout(
