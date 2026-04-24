@@ -83,7 +83,7 @@ def save_to_db(symbol, price, volume, event_time):
 
 def check_db_connection():
     try:
-        with psycopg2.connect(**DB_CONFIG) as conn:
+        with psycopg2.connect(**DB_CONFIG):
             return True
     except Exception:
         return False
